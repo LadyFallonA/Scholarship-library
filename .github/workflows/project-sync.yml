@@ -1,0 +1,64 @@
+# Optional: keeps the GitHub Project (Scholarship Tracker + Roadmap) in step with application issues.
+# Needs a repository secret named PROJECT_TOKEN (a classic personal access token with the "project" scope).
+# Without that secret this workflow does nothing.
+name: Sync applications to project board
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed, reopened]
+permissions:
+  issues: read
+jobs:
+  sync:
+    if: contains(github.event.issue.labels.*.name, 'application')
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+    steps:
+      - name: Skip when no token is configured
+        if: env.PROJECT_TOKEN == ''
+        run: echo "PROJECT_TOKEN secret not set; skipping project sync."
+      - name: Add to project and set fields
+        if: env.PROJECT_TOKEN != ''
+        uses: actions/github-script@v7
+        env:
+          PROJECT_OWNER: LadyFallonA
+          PROJECT_NUMBER: "9"
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            const field = (h) => {
+              const m = body.match(new RegExp(`###\\s*${h}\\s*\\n+([\\s\\S]*?)(?=\\n###\\s|$)`, 'i'));
+              const v = m ? m[1].trim() : '';
+              return v === '_No response_' ? '' : v;
+            };
+            const q = await github.graphql(`query($login:String!,$n:Int!){ user(login:$login){ projectV2(number:$n){ id
+              fields(first:50){ nodes{ ... on ProjectV2FieldCommon { id name dataType }
+                ... on ProjectV2SingleSelectField { id name options { id name } } } } } } }`,
+              { login: process.env.PROJECT_OWNER, n: parseInt(process.env.PROJECT_NUMBER, 10) });
+            const project = q.user.projectV2;
+            const byName = (n) => project.fields.nodes.find(f => f && f.name && f.name.toLowerCase() === n.toLowerCase());
+            const add = await github.graphql(`mutation($p:ID!,$c:ID!){ addProjectV2ItemById(input:{projectId:$p, contentId:$c}){ item { id } } }`,
+              { p: project.id, c: issue.node_id });
+            const itemId = add.addProjectV2ItemById.item.id;
+            const set = async (f, value) => {
+              if (!f) return;
+              await github.graphql(`mutation($p:ID!,$i:ID!,$f:ID!,$v:ProjectV2FieldValue!){
+                updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:$v}){ projectV2Item { id } } }`,
+                { p: project.id, i: itemId, f: f.id, v: value });
+            };
+            const deadline = field('Deadline');
+            if (/^\d{4}-\d{2}-\d{2}$/.test(deadline)) await set(byName('Deadline'), { date: deadline });
+            await set(byName('Start'), { date: issue.created_at.slice(0, 10) });
+            const applicant = field('Student code'); if (applicant) await set(byName('Student code'), { text: applicant });
+            const amount = field('Award amount'); if (amount) await set(byName('Award amount'), { text: amount });
+            const labels = issue.labels.map(l => l.name);
+            const statusLabel = labels.find(l => l.startsWith('status: '));
+            const statusField = byName('Status');
+            if (statusLabel && statusField && statusField.options) {
+              const want = statusLabel.replace('status: ', '').toLowerCase();
+              const opt = statusField.options.find(o => o.name.toLowerCase() === want);
+              if (opt) await set(statusField, { singleSelectOptionId: opt.id });
+            }
+            core.info(`Synced issue #${issue.number} to project item ${itemId}`);

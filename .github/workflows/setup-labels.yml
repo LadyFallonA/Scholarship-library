@@ -1,0 +1,26 @@
+name: Set up tracker labels
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/setup-labels.yml"]
+permissions:
+  issues: write
+jobs:
+  labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or update labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          mk() { gh label create "$1" --color "$2" --description "$3" --repo "$REPO" --force; }
+          mk "application"          "3F5238" "A student's scholarship application"
+          mk "status: interested"   "9CAF88" "Tracker: considering this one"
+          mk "status: drafting"     "C9A35F" "Tracker: essays and materials in progress"
+          mk "status: submitted"    "C17A5B" "Tracker: application sent"
+          mk "status: awarded"      "3F5238" "Tracker: awarded"
+          mk "status: not selected" "B5AC9A" "Tracker: not selected this cycle"
+          mk "library: suggestion"  "E8E2D5" "Community-suggested scholarship to verify"
+          mk "library: update"      "8B5E48" "Change or error in a library entry"
