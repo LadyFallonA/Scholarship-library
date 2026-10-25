@@ -1,0 +1,18 @@
+name: Report a change or error
+description: A deadline moved, a link broke, or eligibility changed.
+title: "[Update] "
+labels: ["library: update"]
+body:
+  - type: input
+    id: library_id
+    attributes:
+      label: Scholarship name or Library ID
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: What changed?
+      description: Include the official link that shows the new information.
+    validations:
+      required: true

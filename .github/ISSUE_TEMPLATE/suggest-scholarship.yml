@@ -1,0 +1,42 @@
+name: Suggest a scholarship
+description: Families and students — share an opportunity for the community library.
+title: "[Suggest] "
+labels: ["library: suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for adding to the library. Every suggestion is checked against the sponsor's official site before it's added.
+        Never share scholarships that charge an application fee.
+  - type: input
+    id: name
+    attributes:
+      label: Scholarship name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Official link
+      description: The sponsor's own page, not a listing site, if you can.
+    validations:
+      required: true
+  - type: input
+    id: amount
+    attributes:
+      label: Award amount
+  - type: input
+    id: deadline
+    attributes:
+      label: Deadline (YYYY-MM-DD)
+  - type: dropdown
+    id: levels
+    attributes:
+      label: Who can apply?
+      multiple: true
+      options: ["HS Junior", "HS Senior", "Undergraduate", "Community College", "Graduate", "Adult / Returning", "Trade / Technical"]
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters for our community
+      description: Who it fits, what you learned applying, anything families should know.

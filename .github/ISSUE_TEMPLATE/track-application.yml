@@ -1,0 +1,61 @@
+name: Track a scholarship application
+description: Add one student's application to the Scholarship Tracker board.
+title: "[Apply] "
+labels: ["application", "status: interested"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This repository is public.** Use a student code (for example `EV-014`), never a full name, school ID, address, or phone number.
+        Change the `status:` label as the application moves: interested → drafting → submitted → awarded / not selected.
+  - type: input
+    id: applicant
+    attributes:
+      label: Student code
+      placeholder: EV-014
+    validations:
+      required: true
+  - type: input
+    id: scholarship
+    attributes:
+      label: Scholarship
+    validations:
+      required: true
+  - type: input
+    id: library_id
+    attributes:
+      label: Library ID
+      description: Filled in automatically when you use "+ Track" from the library.
+  - type: input
+    id: link
+    attributes:
+      label: Official link
+      placeholder: https://
+  - type: input
+    id: deadline
+    attributes:
+      label: Deadline
+      description: Use YYYY-MM-DD so the calendar and roadmap can read it.
+      placeholder: "2026-12-01"
+  - type: input
+    id: amount
+    attributes:
+      label: Award amount
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Eligibility confirmed on the official site
+        - label: FAFSA or TASFA filed (if required)
+        - label: Transcript requested
+        - label: Recommendation letter(s) requested
+        - label: Essay drafted in the Essay Vault
+        - label: Essay reviewed by a mentor
+        - label: Application submitted
+        - label: Confirmation email saved
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Next steps, mentor feedback, questions for the sponsor. No private information.
